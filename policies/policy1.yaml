@@ -1,26 +1,24 @@
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
 metadata:
-  name: nginx-deployment
+  name: validation-policy
 spec:
-  selector:
-    matchLabels:
-      app: nginx
-  replicas: 1 
-  template:
-    metadata:
-      labels:
-        app: nginx
-    spec:
-      containers:
-      - name: nginx
-        image: nginx:latest
-        resources:
-          limits:
-            cpu: "100m"
-            memory: "200Mi"
-          requests:
-            cpu: "100m"
-            memory: "100Mi"
-        ports:
-        - containerPort: 80
+  validationFailureAction: Enforce
+  rules:
+  - name: validation-policy
+    match:
+      any:
+      - resources:
+          kinds:
+          - Pod
+    validate:
+      message: "You must have set cpu and memory usage in all pods."
+      pattern:
+        spec:
+            containers:
+              - resources:
+                  requests:
+                    memory: "?*"
+                    cpu: "?*"
+                  limits:
+                    memory: "?*"
